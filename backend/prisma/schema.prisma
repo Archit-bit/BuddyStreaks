@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  createdStreaks Streak[]       @relation("CreatedStreaks")
+  memberships    StreakMember[]
+  checkIns       CheckIn[]
+}
+
+model Streak {
+  id        String   @id @default(cuid())
+  name      String
+  frequency String
+  createdAt DateTime @default(now())
+
+  createdById String
+  createdBy   User   @relation("CreatedStreaks", fields: [createdById], references: [id])
+
+  members  StreakMember[]
+  checkIns CheckIn[]
+}
+
+model StreakMember {
+  id       String @id @default(cuid())
+  userId   String
+  streakId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  streak Streak @relation(fields: [streakId], references: [id])
+
+  @@unique([userId, streakId])
+}
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  date      DateTime
+  status    String
+  note      String?
+  createdAt DateTime @default(now())
+
+  userId   String
+  streakId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  streak Streak @relation(fields: [streakId], references: [id])
+
+  @@unique([userId, streakId, date])
+}
